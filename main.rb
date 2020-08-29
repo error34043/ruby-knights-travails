@@ -2,43 +2,59 @@
 
 require_relative 'board.rb'
 
+def valid_move?(position)
+  if position[0] > 7 || position[0] < 0 || position[1] > 7 || position[1] < 0
+    false
+  else
+    true
+  end
+end
+
 def possible_moves(position)
   possible_moves_array = []
-  possible_moves_array << [position[0] + 2, position[1] + 1]
-  possible_moves_array << [position[0] + 2, position[1] - 1]
   possible_moves_array << [position[0] + 1, position[1] + 2]
   possible_moves_array << [position[0] + 1, position[1] - 2]
+  possible_moves_array << [position[0] + 2, position[1] + 1]
+  possible_moves_array << [position[0] + 2, position[1] - 1]
   possible_moves_array << [position[0] - 2, position[1] + 1]
   possible_moves_array << [position[0] - 2, position[1] - 1]
   possible_moves_array << [position[0] - 1, position[1] + 2]
   possible_moves_array << [position[0] - 1, position[1] - 2]
-  possible_moves_array
+  possible_moves_array.select { |move| valid_move?(move)}
 end
 
-def clean_move_list(move_list)
-  (move_list.length - 1).downto(0) do |i|
-    condition1 = (0..7).include? move_list[i][0]
-    condition2 = (0..7).include? move_list[i][1]
-    move_list.delete_at(i) unless condition1 && condition2
+def knight_moves(start_location, end_location)
+  unless valid_move?(start_location) && valid_move?(end_location)
+    puts 'Please enter valid positions (between 0 and 7) and try again!'
+    exit
   end
-  move_list
+  path = [start_location]
+  frontier = possible_moves(start_location).map { |position| path + [position] }
+  loop do
+    path = frontier.shift
+    break if path[-1] == end_location
+    frontier += possible_moves(path[-1]).map { |position| path + [position] }
+  end
+  puts "You made it in #{path.length - 1} moves! Here's your path:\n"
+  p path
+  puts ''
+  board = Board.new
+  path.each_with_index do |position, index|
+    board.add_path_indicator(position, index)
+  end
+  board.display_board
 end
 
-def possible_move?(start_location, end_location)
-  pos_moves = clean_move_list(possible_moves(start_location))
-  pos_moves.include? end_location
-end
-
-# Shows the simplest possible way to get from one square to another by outputting all squares the knight will stop on along the way
-def knight_moves
-end
-
-
-
-
-### TESTING
-p possible_moves([5, 7])
-p possible_moves([5, 7]).length
-p clean_move_list(possible_moves([5, 7]))
+empty_board = Board.new
+empty_board.display_board
 puts ''
-p possible_move?([5, 7], [7, 5])
+print 'Which row is the knight starting at? '
+start_row = gets.chomp.to_i
+print 'Which column is the knight starting at? '
+start_column = gets.chomp.to_i
+print 'Which row is the knight going to? '
+end_row = gets.chomp.to_i
+print 'Which column is the knight going to? '
+end_column = gets.chomp.to_i
+puts "\n\n"
+knight_moves([start_row, start_column],[end_row, end_column])
